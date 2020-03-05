@@ -57,6 +57,7 @@ public class MvcConfig implements WebMvcConfigurer {
         registry.addViewController("/updatePassword.html");
         registry.addViewController("/changePassword.html");
         registry.addViewController("/users.html");
+        registry.addViewController("/management.html");
         registry.addViewController("/qrcode.html");
     }
 

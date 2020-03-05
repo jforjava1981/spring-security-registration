@@ -20,6 +20,7 @@ import ua_parser.Parser;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 
 import static java.util.Objects.nonNull;
@@ -83,6 +84,16 @@ public class DeviceService {
             clientIp = parseXForwardedHeader(clientXForwardedForIp);
         } else {
             clientIp = request.getRemoteAddr();
+        }
+        //added this when app is run from localhost/127.0.0.0.1 - local ip
+        if (clientIp.equalsIgnoreCase("0:0:0:0:0:0:0:1") || clientIp.equalsIgnoreCase("127.0.0.1")) {
+            InetAddress inetAddress = null;
+            try {
+                inetAddress = InetAddress.getLocalHost();
+                clientIp = inetAddress.getHostAddress();
+            } catch (UnknownHostException e) {
+                logger.error("No valid host found: address cannot be determined");
+            }
         }
 
         return clientIp;

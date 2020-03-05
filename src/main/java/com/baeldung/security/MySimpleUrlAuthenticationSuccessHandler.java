@@ -49,7 +49,6 @@ public class MySimpleUrlAuthenticationSuccessHandler implements AuthenticationSu
             session.setAttribute("user", user);
         }
         clearAuthenticationAttributes(request);
-
         loginNotification(authentication, request);
     }
 
@@ -60,7 +59,7 @@ public class MySimpleUrlAuthenticationSuccessHandler implements AuthenticationSu
             }
         } catch (Exception e) {
             logger.error("An error occurred while verifying device or location", e);
-            throw new RuntimeException(e);
+          //  throw new RuntimeException(e); - this doesn't work  when app is rub from local - for local addresses like 127.0.0.1 / localhost so commenting out
         }
 
     }
@@ -78,15 +77,14 @@ public class MySimpleUrlAuthenticationSuccessHandler implements AuthenticationSu
     protected String determineTargetUrl(final Authentication authentication) {
         boolean isUser = false;
         boolean isAdmin = false;
+        boolean isManager = false;
         final Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        for (final GrantedAuthority grantedAuthority : authorities) {
-            if (grantedAuthority.getAuthority().equals("READ_PRIVILEGE")) {
-                isUser = true;
-            } else if (grantedAuthority.getAuthority().equals("WRITE_PRIVILEGE")) {
-                isAdmin = true;
-                isUser = false;
-                break;
-            }
+        isAdmin = authorities.stream().anyMatch(authority -> authority.getAuthority().equals("WRITE_PRIVILEGE"));
+        if(!isAdmin) { //if not admin check for manager role
+            isManager = authorities.stream().anyMatch(authority -> authority.getAuthority().equals("MANAGE_USERS_PRIVILEGE"));
+        }
+        if(!isAdmin && !isManager) {
+            isUser = true;
         }
         if (isUser) {
         	 String username;
@@ -100,7 +98,9 @@ public class MySimpleUrlAuthenticationSuccessHandler implements AuthenticationSu
             return "/homepage.html?user="+username;
         } else if (isAdmin) {
             return "/console.html";
-        } else {
+        } else if(isManager) {
+            return "/management.html";
+        } else{
             throw new IllegalStateException();
         }
     }
